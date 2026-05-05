@@ -87,4 +87,19 @@ class DocumentController extends Controller
 
         return response()->json(['message' => 'Document deleted.']);
     }
+
+    public function reprocess(Request $request, int $id, QdrantService $qdrant)
+    {
+        $document = Document::where('tenant_id', $request->user()->tenant_id)
+            ->findOrFail($id);
+
+        // Remove old vectors and chunks, then re-queue
+        $qdrant->deleteByDocument($document->id, $document->tenant_id);
+        $document->chunks()->delete();
+        $document->update(['status' => 'pending', 'chunk_count' => 0]);
+
+        ProcessDocumentJob::dispatch($document);
+
+        return response()->json(['message' => 'Document queued for reprocessing.']);
+    }
 }

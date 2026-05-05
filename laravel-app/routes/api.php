@@ -48,10 +48,11 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:admin')->group(function () {
 
             // Knowledge base
-            Route::get('/documents',          [DocumentController::class, 'index']);
-            Route::post('/documents',         [DocumentController::class, 'store']);
-            Route::get('/documents/{id}',     [DocumentController::class, 'show']);
-            Route::delete('/documents/{id}',  [DocumentController::class, 'destroy']);
+            Route::get('/documents',               [DocumentController::class, 'index']);
+            Route::post('/documents',              [DocumentController::class, 'store']);
+            Route::get('/documents/{id}',          [DocumentController::class, 'show']);
+            Route::delete('/documents/{id}',       [DocumentController::class, 'destroy']);
+            Route::post('/documents/{id}/reprocess', [DocumentController::class, 'reprocess']);
 
             // Conversation history & logs
             Route::get('/conversations',                  [ConversationController::class, 'index']);

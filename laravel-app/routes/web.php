@@ -3,6 +3,7 @@
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\DocumentsController;
 use Illuminate\Support\Facades\Route;
 
 // ── Guest ─────────────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ Route::middleware('guest')->group(function () {
 // ── Authenticated ─────────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/documents', [DocumentsController::class, 'index'])->name('documents');
     Route::get('/chat',      fn() => view('chat'))->name('chat');
     Route::post('/chat/sse', [AIController::class, 'sse'])->name('chat.sse');
     Route::post('/logout',   [AuthController::class, 'logout'])->name('logout');
