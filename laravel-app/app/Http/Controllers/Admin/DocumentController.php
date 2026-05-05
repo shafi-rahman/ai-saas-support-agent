@@ -20,20 +20,26 @@ class DocumentController extends Controller
         return response()->json($docs);
     }
 
+    private const FILE_TYPES = ['pdf', 'docx', 'csv', 'txt'];
+
     public function store(Request $request)
     {
         $request->validate([
-            'type'    => 'required|in:pdf,text,url',
+            'type'    => 'required|in:pdf,docx,csv,txt,text,url',
             'title'   => 'required|string|max:255',
             'content' => 'required_if:type,text|nullable|string',
             'url'     => 'required_if:type,url|nullable|url|max:2048',
-            'file'    => 'required_if:type,pdf|nullable|file|mimes:pdf|max:20480',
+            'file'    => [
+                'nullable', 'file', 'max:20480',
+                \Illuminate\Validation\Rule::requiredIf(in_array($request->type, self::FILE_TYPES)),
+                'mimes:pdf,docx,csv,txt',
+            ],
         ]);
 
         $tenantId = $request->user()->tenant_id;
         $source   = null;
 
-        if ($request->type === 'pdf') {
+        if (in_array($request->type, self::FILE_TYPES)) {
             $source = $request->file('file')->store("documents/{$tenantId}", 'local');
         } elseif ($request->type === 'url') {
             $source = $request->url;

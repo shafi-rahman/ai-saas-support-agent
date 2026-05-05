@@ -69,6 +69,9 @@ class ProcessDocumentJob implements ShouldQueue
             'text'  => Storage::disk('local')->get($this->document->source),
             'pdf'   => $this->extractPdf(),
             'url'   => $this->extractUrl(),
+            'docx'  => $this->extractDocx(),
+            'csv'   => $this->extractCsv(),
+            'txt'   => Storage::disk('local')->get($this->document->source),
             default => throw new \RuntimeException("Unsupported document type: {$this->document->type}"),
         };
     }
@@ -86,6 +89,47 @@ class ProcessDocumentJob implements ShouldQueue
         $pdf    = $parser->parseFile($path);
 
         return $pdf->getText();
+    }
+
+    private function extractDocx(): string
+    {
+        $path = Storage::disk('local')->path($this->document->source);
+        $zip  = new \ZipArchive();
+
+        if ($zip->open($path) !== true) {
+            throw new \RuntimeException('Could not open DOCX file.');
+        }
+
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+
+        if ($xml === false) {
+            throw new \RuntimeException('Invalid DOCX: missing word/document.xml');
+        }
+
+        $text = strip_tags(str_replace(['</w:p>', '</w:tr>'], "\n", $xml));
+        return preg_replace('/[ \t]+/', ' ', $text);
+    }
+
+    private function extractCsv(): string
+    {
+        $path  = Storage::disk('local')->path($this->document->source);
+        $lines = [];
+
+        if (($fh = fopen($path, 'r')) !== false) {
+            $headers = null;
+            while (($row = fgetcsv($fh)) !== false) {
+                if ($headers === null) {
+                    $headers = $row;
+                    continue;
+                }
+                $paired  = array_combine($headers, array_pad($row, count($headers), ''));
+                $lines[] = implode(', ', array_map(fn($k, $v) => "$k: $v", array_keys($paired), $paired));
+            }
+            fclose($fh);
+        }
+
+        return implode("\n", $lines);
     }
 
     private function extractUrl(): string

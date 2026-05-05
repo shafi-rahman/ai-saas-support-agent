@@ -47,14 +47,18 @@
                 <div class="flex gap-2">
                     <select id="docType"
                             class="flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                        <option value="pdf">PDF file</option>
-                        <option value="text">Plain text</option>
+                        <option value="pdf">PDF (.pdf)</option>
+                        <option value="docx">Word (.docx)</option>
+                        <option value="csv">CSV (.csv)</option>
+                        <option value="txt">Text file (.txt)</option>
+                        <option value="text">Plain text (paste)</option>
                         <option value="url">URL</option>
                     </select>
                 </div>
                 <div id="fileInput">
                     <input type="file" id="docFile" accept=".pdf"
                            class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p id="fileHint" class="text-xs text-gray-400 mt-1">PDF up to 20 MB</p>
                 </div>
                 <div id="textInput" class="hidden">
                     <textarea id="docContent" rows="4" placeholder="Paste your document content here..."
@@ -165,16 +169,33 @@
 @push('scripts')
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+const TOKEN = '{{ session("api_token", "") }}';
 const typeEl   = document.getElementById('docType');
 const fileDiv  = document.getElementById('fileInput');
+const fileEl   = document.getElementById('docFile');
+const fileHint = document.getElementById('fileHint');
 const textDiv  = document.getElementById('textInput');
 const urlDiv   = document.getElementById('urlInput');
 const statusEl = document.getElementById('uploadStatus');
 
+const FILE_TYPES = { pdf: '.pdf', docx: '.docx', csv: '.csv', txt: '.txt' };
+const FILE_HINTS = {
+    pdf:  'PDF up to 20 MB',
+    docx: 'Word document (.docx) up to 20 MB',
+    csv:  'CSV file up to 20 MB',
+    txt:  'Plain text file (.txt) up to 20 MB',
+};
+
 typeEl.addEventListener('change', () => {
-    fileDiv.classList.toggle('hidden', typeEl.value !== 'pdf');
-    textDiv.classList.toggle('hidden', typeEl.value !== 'text');
-    urlDiv.classList.toggle('hidden',  typeEl.value !== 'url');
+    const t = typeEl.value;
+    const isFile = t in FILE_TYPES;
+    fileDiv.classList.toggle('hidden', !isFile);
+    textDiv.classList.toggle('hidden', t !== 'text');
+    urlDiv.classList.toggle('hidden',  t !== 'url');
+    if (isFile) {
+        fileEl.accept = FILE_TYPES[t];
+        fileHint.textContent = FILE_HINTS[t];
+    }
 });
 
 document.getElementById('uploadForm').addEventListener('submit', async (e) => {
@@ -190,26 +211,25 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     try {
         let body, headers;
 
-        if (type === 'pdf') {
-            const file = document.getElementById('docFile').files[0];
-            if (!file) { statusEl.className = 'text-sm text-red-600'; statusEl.textContent = 'Select a PDF file.'; return; }
+        if (type in FILE_TYPES) {
+            const file = fileEl.files[0];
+            if (!file) { statusEl.className = 'text-sm text-red-600'; statusEl.textContent = 'Select a file.'; return; }
             const fd = new FormData();
             fd.append('title', title);
-            fd.append('type', 'pdf');
+            fd.append('type', type);
             fd.append('file', file);
             body    = fd;
-            headers = { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' };
+            headers = { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
         } else {
             const content = type === 'url'
                 ? document.getElementById('docUrl').value.trim()
                 : document.getElementById('docContent').value.trim();
             if (!content) { statusEl.className = 'text-sm text-red-600'; statusEl.textContent = 'Content required.'; return; }
-            body    = JSON.stringify({ title, type, [type === 'url' ? 'source' : 'content']: content });
-            headers = { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' };
+            body    = JSON.stringify({ title, type, [type === 'url' ? 'url' : 'content']: content });
+            headers = { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
         }
 
-        const res  = await fetch('/api/v1/documents', { method: 'POST', headers, body,
-            headers: { ...headers, 'Authorization': 'Bearer {{ session("api_token", "") }}' } });
+        const res  = await fetch('/api/v1/documents', { method: 'POST', headers, body });
         const data = await res.json();
 
         if (res.ok) {
