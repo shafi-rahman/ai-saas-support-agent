@@ -16,17 +16,20 @@ A multi-tenant AI support agent platform built with Laravel 12. Each company get
 2. **Upload** documents — PDF, Word, CSV, TXT, plain text, or a URL
 3. Documents are chunked and embedded into a vector database in the background
 4. **Chat** — ask questions and get AI answers grounded in your uploaded content (RAG)
-5. Each tenant's data is fully isolated from all others
+5. **Embed** a floating chat widget on any website with a single `<script>` tag
+6. Each tenant's data is fully isolated from all others
 
 ---
 
 ## Features
 
 - Multi-tenant architecture — one codebase, many companies
-- Document types: PDF, DOCX, CSV, TXT, plain text, URL scraping
+- Document upload: PDF, DOCX, CSV, TXT, plain text, URL scraping
 - RAG pipeline: chunk → embed → store in Qdrant → retrieve → generate
 - Streaming chat responses (Server-Sent Events)
-- Web dashboard: stats, document upload, recent activity
+- Web UI: dashboard, document management (list / delete / re-process), settings, chat
+- **Embeddable widget** — copy-paste `<script>` snippet adds a chat bubble to any website
+- Settings page: default AI model picker, custom system prompt (agent persona), API key management
 - REST API with token authentication (usable from any frontend or curl)
 - Conversation history and AI request logs
 - Queue-based background processing for documents
@@ -93,7 +96,7 @@ Install these before you start:
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/ai-saas-support-agent.git
+git clone https://github.com/shafi-rahman/ai-saas-support-agent.git
 cd ai-saas-support-agent/laravel-app
 ```
 
@@ -161,8 +164,10 @@ Visit [http://localhost:8000](http://localhost:8000), click **Create account**, 
 |---|---|---|
 | Register | `/register` | Create a company account |
 | Login | `/login` | Sign in |
-| Dashboard | `/dashboard` | Upload docs, view stats |
+| Dashboard | `/dashboard` | Upload docs, view stats, copy embed snippet |
+| Documents | `/documents` | List, delete, and re-process knowledge base docs |
 | Chat | `/chat` | Talk to your knowledge base |
+| Settings | `/settings` | Default model, agent persona, API key |
 
 ### REST API
 
@@ -198,6 +203,39 @@ curl http://localhost:8000/api/v1/conversations \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
+**Delete a document:**
+```bash
+curl -X DELETE http://localhost:8000/api/v1/documents/1 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Re-process a document** (clears old vectors and re-embeds):
+```bash
+curl -X POST http://localhost:8000/api/v1/documents/1/reprocess \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Embeddable widget
+
+The widget endpoint is **public** — no Bearer token needed, just the tenant's widget key.
+
+```bash
+curl -X POST http://localhost:8000/api/widget/chat \
+  -H "Content-Type: application/json" \
+  -d '{"widget_key":"YOUR_WIDGET_KEY","prompt":"What is your return policy?","session_id":"abc123"}'
+```
+
+To embed the chat bubble on any website, copy the snippet from `/dashboard` and paste it before `</body>`:
+
+```html
+<script src="https://yourapp.com/widget.js"
+        data-key="YOUR_WIDGET_KEY"
+        data-title="Acme Support"
+        data-color="#2563eb"
+        data-position="right"
+        data-model="phi"></script>
+```
+
 ---
 
 ## Project structure
@@ -206,12 +244,15 @@ curl http://localhost:8000/api/v1/conversations \
 laravel-app/
 ├── app/
 │   ├── Http/Controllers/
-│   │   ├── Admin/DocumentController.php   # document CRUD API
+│   │   ├── Admin/DocumentController.php   # document CRUD + reprocess API
 │   │   ├── AIController.php               # chat + SSE streaming
 │   │   ├── ConversationController.php     # history + logs API
+│   │   ├── WidgetController.php           # public widget chat endpoint (CORS)
 │   │   └── Web/
 │   │       ├── AuthController.php         # login / register / logout
-│   │       └── DashboardController.php    # dashboard page
+│   │       ├── DashboardController.php    # dashboard page
+│   │       ├── DocumentsController.php    # document management page
+│   │       └── SettingsController.php     # settings + API key regeneration
 │   ├── Jobs/
 │   │   └── ProcessDocumentJob.php         # chunk → embed → store in Qdrant
 │   ├── Models/
@@ -232,8 +273,12 @@ laravel-app/
 ├── resources/views/
 │   ├── layouts/app.blade.php              # sidebar layout
 │   ├── auth/{login,register}.blade.php
-│   ├── dashboard.blade.php
+│   ├── dashboard.blade.php                # stats, upload, embed snippet
+│   ├── documents.blade.php                # list, delete, re-process
+│   ├── settings.blade.php                 # model, persona, API key
 │   └── chat.blade.php                     # streaming chat UI
+├── public/
+│   └── widget.js                          # self-contained embeddable chat bubble
 ├── database/migrations/                   # all schema migrations
 ├── docker-compose.yml                     # MySQL + Qdrant
 └── .env.example                           # all config options documented
