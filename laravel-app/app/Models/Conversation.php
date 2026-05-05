@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Conversation extends Model
+{
+    protected $fillable = ['session_id', 'tenant_id'];
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+}
