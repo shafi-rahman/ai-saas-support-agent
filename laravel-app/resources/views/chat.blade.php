@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat — {{ auth()->check() ? auth()->user()->tenant->name : 'AI Support' }}</title>
     @auth
-    <meta name="session-token" content="{{ session('api_token', '') }}">
+    <meta name="session-token"   content="{{ session('api_token', '') }}">
+    <meta name="default-model"   content="{{ auth()->user()->tenant->default_model ?? 'phi' }}">
+    <meta name="default-system"  content="{{ auth()->user()->tenant->system_prompt ?? '' }}">
     @endauth
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -320,10 +322,15 @@ const settingsBar  = document.getElementById('settingsBar');
 const newChatBtn   = document.getElementById('newChatBtn');
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-const sessionToken = document.querySelector('meta[name="session-token"]')?.content;
+const sessionToken   = document.querySelector('meta[name="session-token"]')?.content;
+const defaultModel  = document.querySelector('meta[name="default-model"]')?.content;
+const defaultSystem = document.querySelector('meta[name="default-system"]')?.content;
+
 if (sessionToken) { apiKeyEl.value = sessionToken; LS.set('api_key', sessionToken); }
 else { apiKeyEl.value = LS.get('api_key'); }
-modelEl.value  = LS.get('model', 'phi');
+
+modelEl.value  = defaultModel  || LS.get('model', 'phi');
+systemEl.value = defaultSystem || LS.get('assistant_role');
 systemEl.value = LS.get('assistant_role');
 sessionLabel.textContent = getSessionId();
 

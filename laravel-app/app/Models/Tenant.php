@@ -11,6 +11,8 @@ class Tenant extends Model
         'name',
         'slug',
         'widget_key',
+        'default_model',
+        'system_prompt',
         'is_active',
     ];
 
