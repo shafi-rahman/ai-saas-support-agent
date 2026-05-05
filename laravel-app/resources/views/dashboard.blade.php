@@ -150,6 +150,27 @@
     </div>
     @endif
 
+    {{-- Embed widget --}}
+    <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <h2 class="font-semibold text-gray-900">Embed on your website</h2>
+                <p class="text-sm text-gray-500 mt-0.5">Paste this snippet before <code class="bg-gray-100 px-1 rounded text-xs">&lt;/body&gt;</code> to add a chat bubble to any page.</p>
+            </div>
+        </div>
+        <div class="relative">
+            <pre id="snippetCode" class="bg-gray-900 text-green-400 text-xs rounded-lg p-4 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed"><span class="text-gray-500">&lt;!-- AI Support Widget --&gt;</span>
+&lt;script src="{{ url('widget.js') }}"
+        data-key="{{ $widgetKey }}"
+        data-title="{{ auth()->user()->tenant->name }}"&gt;&lt;/script&gt;</pre>
+            <button onclick="copySnippet()" id="copyBtn"
+                    class="absolute top-3 right-3 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs rounded-md transition-colors">
+                Copy
+            </button>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Optional attributes: <code class="bg-gray-100 px-1 rounded">data-color="#2563eb"</code> &nbsp; <code class="bg-gray-100 px-1 rounded">data-position="left"</code> &nbsp; <code class="bg-gray-100 px-1 rounded">data-model="llama3"</code></p>
+    </div>
+
     {{-- Quick chat CTA --}}
     <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 flex items-center justify-between">
         <div>
@@ -167,6 +188,17 @@
 @endsection
 
 @push('scripts')
+<script>
+function copySnippet() {
+    const code = document.getElementById('snippetCode').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('bg-green-700');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('bg-green-700'); }, 2000);
+    });
+}
+</script>
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 const TOKEN = '{{ session("api_token", "") }}';

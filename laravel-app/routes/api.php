@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\WidgetController;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,10 @@ Route::get('/health', function () {
         'time'   => now()->toISOString(),
     ], $up ? 200 : 503);
 });
+
+// ── Public widget endpoints (no auth, CORS-enabled) ──────────────────────────
+Route::options('/widget/chat', [WidgetController::class, 'preflight']);
+Route::post('/widget/chat',    [WidgetController::class, 'chat'])->middleware('throttle:60,1');
 
 Route::prefix('v1')->group(function () {
 

@@ -10,12 +10,22 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'slug',
+        'widget_key',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Tenant $tenant) {
+            if (empty($tenant->widget_key)) {
+                $tenant->widget_key = bin2hex(random_bytes(16));
+            }
+        });
+    }
 
     public function users()
     {

@@ -18,7 +18,7 @@ class DashboardController extends Controller
             'documents'     => Document::where('tenant_id', $tenantId)->count(),
             'docs_ready'    => Document::where('tenant_id', $tenantId)->where('status', 'ready')->count(),
             'conversations' => Conversation::where('tenant_id', $tenantId)->count(),
-            'messages'      => Message::whereHas('conversation', fn($q) => $q->where('tenant_id', $tenantId))->count(),
+            'messages'      => Message::whereIn('conversation_id', Conversation::where('tenant_id', $tenantId)->select('id'))->count(),
         ];
 
         $recentDocs = Document::where('tenant_id', $tenantId)
@@ -31,6 +31,8 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
-        return view('dashboard', compact('stats', 'recentDocs', 'recentLogs'));
+        $widgetKey = auth()->user()->tenant->widget_key;
+
+        return view('dashboard', compact('stats', 'recentDocs', 'recentLogs', 'widgetKey'));
     }
 }
