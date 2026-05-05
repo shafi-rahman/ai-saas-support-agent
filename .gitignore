@@ -1,1 +1,14 @@
+# Claude Code workspace
 .claude/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/
+.zed/
+*.swp
+*.swo
