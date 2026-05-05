@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ollama Chat</title>
+    <title>Chat — {{ auth()->check() ? auth()->user()->tenant->name : 'AI Support' }}</title>
+    @auth
+    <meta name="session-token" content="{{ session('api_token', '') }}">
+    @endauth
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -186,7 +189,12 @@
 
     <!-- ── Header ── -->
     <header class="header">
-        <div class="header-brand">⚡ Ollama Chat</div>
+        <div class="header-brand">
+            @auth
+            <a href="{{ route('dashboard') }}" style="font-size:12px;color:var(--text-muted);text-decoration:none;margin-right:4px;" title="Back to Dashboard">← Dashboard</a>
+            @endauth
+            ⚡ {{ auth()->check() ? auth()->user()->tenant->name . ' Chat' : 'Ollama Chat' }}
+        </div>
 
         <div class="tabs">
             <button class="tab-btn active" data-tab="chat"    onclick="switchTab('chat')">Chat</button>
@@ -202,11 +210,16 @@
 
     <!-- ── Settings (Chat tab only) ── -->
     <div class="settings" id="settingsBar">
+        @guest
         <div class="settings-group">
             <label for="apiKey">API Key</label>
             <input type="password" id="apiKey" placeholder="your-api-key" autocomplete="off">
         </div>
         <div class="divider"></div>
+        @endguest
+        @auth
+        <input type="hidden" id="apiKey">
+        @endauth
         <div class="settings-group">
             <label for="model">Model</label>
             <select id="model">
@@ -229,7 +242,7 @@
             <div class="empty-state" id="emptyState">
                 <div class="icon">💬</div>
                 <p>Start a conversation</p>
-                <small>Set your API key above, then type a message</small>
+                <small>@auth Type a message to chat with your knowledge base @else Set your API key above, then type a message @endauth</small>
             </div>
         </div>
         <div class="input-area">
@@ -307,7 +320,9 @@ const settingsBar  = document.getElementById('settingsBar');
 const newChatBtn   = document.getElementById('newChatBtn');
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-apiKeyEl.value = LS.get('api_key');
+const sessionToken = document.querySelector('meta[name="session-token"]')?.content;
+if (sessionToken) { apiKeyEl.value = sessionToken; LS.set('api_key', sessionToken); }
+else { apiKeyEl.value = LS.get('api_key'); }
 modelEl.value  = LS.get('model', 'phi');
 systemEl.value = LS.get('assistant_role');
 sessionLabel.textContent = getSessionId();
