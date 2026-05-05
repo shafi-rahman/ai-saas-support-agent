@@ -131,10 +131,11 @@ cp .env.example .env
 composer install
 php artisan key:generate
 php artisan migrate
-npm install && npm run build
 ```
 
 The default `.env.example` is pre-configured for the Docker setup above. No changes needed if you used Docker.
+
+> **Tip:** The project uses Tailwind CSS via CDN — there is no npm/Node.js build step required.
 
 ### 5. Start the server
 
