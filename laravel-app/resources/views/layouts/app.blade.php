@@ -12,10 +12,23 @@
         }
     </script>
     <style>
-        [x-cloak] { display: none; }
-        .nav-link { @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors; }
-        .nav-link:not(.active) { @apply text-gray-400 hover:text-white hover:bg-white/10; }
-        .nav-link.active { @apply bg-blue-600 text-white; }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background .15s, color .15s;
+            color: #9ca3af;
+            white-space: nowrap;
+        }
+        .nav-link:hover { background: rgba(255,255,255,.08); color: #fff; }
+        .nav-link.active { background: #2563eb; color: #fff; }
+        .nav-link svg { flex-shrink: 0; opacity: .8; }
+        .nav-link.active svg { opacity: 1; }
     </style>
     @stack('head')
 </head>
