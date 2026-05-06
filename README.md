@@ -12,7 +12,6 @@ A multi-tenant AI support agent platform built with Laravel 12. Each company get
   <img src="https://img.shields.io/badge/Architecture-RAG-orange" />
   <img src="https://img.shields.io/badge/License-MIT-green" />
 </p>
----
 
 ## What it does
 
@@ -375,9 +374,10 @@ Ollama is loading the model into RAM. Subsequent messages are much faster.
 
 ## 👨‍💻 Author
 
-Shafi Rahman  
-Senior PHP / Laravel Developer 
-https://www.linkedin.com/in/shafirahman-com/ 
+**Shafi Ur Rahman**  
+Senior PHP / Laravel Developer  
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Shafi%20Ur%20Rahman-blue?logo=linkedin&style=flat-square)](https://www.linkedin.com/in/shafirahman-com/)
 
 ---
 
